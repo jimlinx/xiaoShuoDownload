@@ -1,0 +1,12 @@
+# composer vendor
+vendor/**
+
+# phpstorm
+**/.idea
+
+# composer lock
+composer.lock
+
+# codeception
+tests/_support/_generated/*
+tests/_output/**
