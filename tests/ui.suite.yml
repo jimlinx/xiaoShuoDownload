@@ -1,0 +1,27 @@
+# Codeception Test Suite Configuration
+#
+# Suite for ui tests.
+# Perform tests in browser using the WebDriver or PhpBrowser.
+# If you need both WebDriver and PHPBrowser tests - create a separate suite.
+
+actor: UITester
+modules:
+    enabled:
+        - WebDriver
+        - \Helper\UI
+        - Asserts
+    config:
+        WebDriver:
+            url:
+            browser: chrome
+            window_size: 1310x5000
+            restart: true
+            clear_cookies: true
+            capabilities:
+                javascriptEnabled: true
+                chromeOptions:
+                    prefs:
+                        download.default_directory: "/tmp"
+                    args: ["--headless", "--enable-javascript", "--force-device-scale-factor=1", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--start-fullscreen", "--start-maximized", "--window-size=1310,5000"]
+#                    args: ["--enable-javascript", "--force-device-scale-factor=1", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
+step_decorators: ~        

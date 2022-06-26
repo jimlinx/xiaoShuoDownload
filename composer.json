@@ -1,0 +1,12 @@
+{
+    "require-dev": {
+        "phpunit/phpunit": "*",
+        "php-webdriver/webdriver": "*",
+        "codeception/codeception": "^4.2",
+        "codeception/module-webdriver": "*",
+        "codeception/module-asserts": "*",
+        "codeception/module-phpbrowser": "*",
+        "codeception/phpunit-wrapper": "*",
+        "codeception/lib-innerbrowser": "*"
+    }
+}
