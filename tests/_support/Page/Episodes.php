@@ -13,7 +13,75 @@ class Episodes
     public static string $tenDownload_main_dl_btn = "//a[@class='btn_download']";
     public static string $tenDownload_episode_360p_btn = "(//tr[descendant::td[text()='360p']]//a)[1]";
 
+    public static int $parallelDownload = 20;
+
+    public static function downloadFromJsonFile($path, $name): void
+    {
+        echo "\n";
+        $jsonArray = Utility::readJsonFile($path);
+        $total = count($jsonArray);
+        $count = 1;
+
+        $subCount = 1;
+        $urlList = [];
+        foreach ($jsonArray as $index => $url) {
+            self::$I->amOnUrl($url);
+            self::$I->waitForElement(self::$tenDownload_episode_360p_btn, 30);
+
+            # Parse episode URL
+            $downloadUrl = self::$I->grabAttributeFrom(self::$tenDownload_episode_360p_btn, 'href');
+
+            echo "Index[$index][$count | $total]\n";
+            $urlList[$index] = $downloadUrl;
+
+            if ($subCount == self::$parallelDownload || $count == $total) {
+                Utility::curlMultiDownload($name, $urlList);
+                $subCount = 1;
+                $urlList = [];
+            }
+//            Utility::curlConfigDownload($downloadUrl, $name . "_" . $index . ".mp4");
+            $count++;
+            $subCount++;
+        }
+    }
+
     /**
+     * https://10downloader.com/playlist?v=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DPLRdhGgJyo5jpBs6zdPBt3rQbZKLdaRsWu
+     * @param $url
+     * @param $name
+     * @param string $baseUrl
+     * @return void
+     */
+    public static function tenDownloader($url, $name, string $baseUrl = "https://10downloader.com"): void
+    {
+        echo "\n";
+        $entries = [];
+        self::$I->amOnUrl($url);
+
+        $totalCount = count(self::$I->grabMultiple(self::$tenDownload_main_dl_btn, 'href'));
+        echo "Total Episodes: $totalCount\n";
+
+        for ($i = 1; $i <= $totalCount; $i++) {
+            $xpath = "(//a[@class='btn_download'])[$i]/../../td[@class='playlist__video--title']";
+            $title = trim(self::$I->grabTextFrom($xpath));
+            $regex = "!(\d+)!";
+            $index = $title;
+            preg_match($regex, $title, $match);
+            if ($match != null) {
+                $episode = str_pad($match[1], 4, '0', STR_PAD_LEFT);
+                $index = $episode;
+            }
+            $xpath = "(//a[@class='btn_download'])[$i]";
+            $href = self::$I->grabAttributeFrom($xpath, 'href');
+            $entries[$index] = $baseUrl . $href;
+            echo "[$index]: " . $entries[$index] . "\n\n";
+        }
+
+        Utility::writeToFile("$name.json", json_encode($entries, JSON_PRETTY_PRINT));
+    }
+
+    /**
+     * http://aitinghua.cn/
      * https://mobile.ximalaya.com/mobile/redirect/free/play/136783856/0
      * @param $start
      * @param $end
@@ -32,67 +100,6 @@ class Episodes
             self::$I->restart();
 
             Utility::saveUrl($src, "file_" . str_pad($i, 4, '0', STR_PAD_LEFT) . ".m4a");
-        }
-    }
-
-    /**
-     * https://10downloader.com/playlist?v=https%3A%2F%2Fwww.youtube.com%2Fplaylist%3Flist%3DPLRdhGgJyo5jpBs6zdPBt3rQbZKLdaRsWu
-     * @param $url
-     * @param $name
-     * @param string $baseUrl
-     * @return void
-     */
-    public static function tenDownloader($url, $name, string $baseUrl = "https://10downloader.com"): void
-    {
-        echo "\n";
-        $urls = [];
-        self::$I->amOnUrl($url);
-        $downloadBtns = self::$I->grabMultiple(self::$tenDownload_main_dl_btn, 'href');
-        foreach($downloadBtns as $downloadBtn) {
-            $urls[] =  $baseUrl . "$downloadBtn\n";
-        }
-
-        $saveUrls = [];
-        $total = count($urls);
-        $count = 1;
-        foreach($urls as $url) {
-            self::$I->amOnUrl($url);
-            self::$I->waitForElement(self::$tenDownload_episode_360p_btn, 30);
-            $episodeTitle = self::$I->grabAttributeFrom(self::$tenDownload_episode_360p_btn, 'download');
-
-            # Parse episode number
-            echo "[$total / $count] Episode Title: $episodeTitle\n";
-            $episodeName = $episodeTitle;
-            $regex = "!(\d+)!";
-            preg_match($regex, $episodeTitle, $match);
-            if ($match != null) {
-                $episode = str_pad($match[1], 4, '0', STR_PAD_LEFT);
-                $episodeName = $name . "_" . $episode;
-            }
-            # Parse episode URL
-            $downloadUrl = self::$I->grabAttributeFrom(self::$tenDownload_episode_360p_btn, 'href');
-
-            echo "$episodeName: $downloadUrl\n\n";
-            $saveUrls[$episode] = [
-                'name' => $episodeName,
-                'url' => $downloadUrl
-            ];
-//            Utility::saveUrl($downloadUrl, $episodeName);
-            $count++;
-
-            if($count == 5)
-                break;
-        }
-
-        Utility::writeToFile("$name.json", json_encode($saveUrls));
-    }
-
-    public static function downloadFromJsonFile($path)
-    {
-        $jsonObj = Utility::readJsonFile($path);
-        foreach($jsonObj as $entry) {
-            echo "name: " . $entry['name'] . "\n";
-            echo "url: " . $entry['url'] . "\n\n";
         }
     }
 }

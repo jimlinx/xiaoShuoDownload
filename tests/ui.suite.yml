@@ -21,7 +21,7 @@ modules:
                 javascriptEnabled: true
                 chromeOptions:
                     prefs:
-                        download.default_directory: "/tmp"
+                        download.default_directory: "/home/jimlin/Downloads"
                     args: ["--headless", "--enable-javascript", "--force-device-scale-factor=1", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu", "--start-fullscreen", "--start-maximized", "--window-size=1310,5000"]
 #                    args: ["--enable-javascript", "--force-device-scale-factor=1", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
 step_decorators: ~        
